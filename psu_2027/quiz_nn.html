@@ -1,5 +1,8 @@
 <!DOCTYPE html>
-<html lang="ru"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Тест: нейронные сети (FCNN, RNN, CNN)</title>
 <style>
 :root{--bg:#0f172a;--card:#1e293b;--accent:#38bdf8;--ok:#22c55e;--bad:#ef4444;--muted:#94a3b8;--text:#e2e8f0;}
@@ -26,66 +29,97 @@ button.secondary{background:#334155;color:var(--text);}button:disabled{opacity:.
 .toolbar{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px;justify-content:center;}
 table{width:100%;border-collapse:collapse;font-size:13px;margin-top:12px;}
 th,td{border:1px solid #334155;padding:6px 8px;text-align:left;}th{background:#0f172a;}
-h3{margin-top:20px;}
-</style></head><body><div class="wrap">
-<h1>Тест: нейронные сети</h1>
-<div class="sub">Темы: базовые понятия, FCNN, RNN, CNN. 50 вопросов по 1 баллу. Введите данные и нажмите «Начать».</div>
-<div id="intro" class="card">
-  <div class="row">
-    <div><label>Фамилия</label><input id="surname" placeholder="Иванов"></div>
-    <div><label>Имя</label><input id="name" placeholder="Иван"></div>
-    <div><label>Группа</label><input id="group" placeholder="ПИ-21"></div>
+h3{margin-top:20px;}.err{color:var(--bad);margin-top:8px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Тест: нейронные сети</h1>
+  <div class="sub">Темы: базовые понятия, FCNN, RNN, CNN. 50 вопросов по 1 баллу.</div>
+
+  <div id="intro" class="card">
+    <div class="row">
+      <div><label>Фамилия</label><input id="surname" placeholder="Иванов"></div>
+      <div><label>Имя</label><input id="name" placeholder="Иван"></div>
+      <div><label>Группа</label><input id="group" placeholder="ПИ-21"></div>
+    </div>
+    <div id="introErr" class="err hidden"></div>
+    <div class="toolbar"><button id="startBtn">Начать тест</button></div>
   </div>
-  <div style="margin-top:14px"><label>Время на тест (минут, 0 = без ограничения)</label><input id="time" type="number" value="45" min="0" max="180"></div>
-  <div class="toolbar"><button id="startBtn">Начать тест</button></div>
+
+  <div id="quiz" class="hidden">
+    <div class="progress"><div id="bar" style="width:0%"></div></div>
+    <div id="questions"></div>
+    <div class="toolbar"><button id="submitBtn">Завершить и проверить</button></div>
+  </div>
+
+  <div id="result" class="hidden card result"></div>
 </div>
-<div id="quiz" class="hidden">
-  <div class="progress"><div id="bar" style="width:0%"></div></div>
-  <div id="timer" class="sub"></div>
-  <div id="questions"></div>
-  <div class="toolbar"><button id="submitBtn">Завершить и проверить</button></div>
-</div>
-<div id="result" class="hidden card result"></div>
-</div>
+
 <script>
 const QUESTIONS = [{"id": 1, "topic": "Базовые понятия", "q": "Основная цель обучения нейронной сети — это:", "options": ["Максимизация числа параметров сети", "Минимизация функции потерь (ошибки)", "Максимизация размера батча", "Минимизация количества эпох"], "correct": 1, "points": 1, "expl": "Обучение — оптимизация параметров для минимизации функции потерь на данных."}, {"id": 2, "topic": "Базовые понятия", "q": "Искусственный нейрон (перцептрон) вычисляет:", "options": ["Только сумму входных сигналов", "Взвешенную сумму входов + смещение, затем функцию активации", "Произведение входных сигналов", "Среднее арифметическое входов"], "correct": 1, "points": 1, "expl": "z = sum(w_i x_i) + b; a = f(z)."}, {"id": 3, "topic": "Базовые понятия", "q": "Что такое вес (weight) синаптической связи?", "options": ["Коэффициент, умножающий входной сигнал", "Постоянная добавка к выходу", "Число нейронов в слое", "Размер обучающей выборки"], "correct": 0, "points": 1, "expl": ""}, {"id": 4, "topic": "Базовые понятия", "q": "Смещение (bias) в нейроне позволяет:", "options": ["Ускорить вычисления", "Сдвигать порог срабатывания функции активации", "Уменьшить число параметров", "Исключить переобучение"], "correct": 1, "points": 1, "expl": ""}, {"id": 5, "topic": "Базовые понятия", "q": "Функция активации ReLU(x) = max(0, x). Для отрицательного входа она возвращает:", "options": ["Входное значение", "0", "1", "-x"], "correct": 1, "points": 1, "expl": ""}, {"id": 6, "topic": "Базовые понятия", "q": "Сигмоида σ(x)=1/(1+e^{-x}) принимает значения в диапазоне:", "options": ["(-∞, +∞)", "(0, 1)", "[-1, 1]", "[0, +∞)"], "correct": 1, "points": 1, "expl": ""}, {"id": 7, "topic": "Базовые понятия", "q": "Производная сигмоиды σ'(x)=σ(x)(1-σ(x)). Её значение в точке x=0 равно:", "options": ["0", "0.25", "0.5", "1"], "correct": 1, "points": 1, "expl": ""}, {"id": 8, "topic": "Базовые понятия", "q": "Какая функция активации чаще всего используется в скрытых слоях современных сетей?", "options": ["Сигмоида", "Гиперболический тангенс", "ReLU", "Линейная"], "correct": 2, "points": 1, "expl": ""}, {"id": 9, "topic": "Базовые понятия", "q": "Градиентный спуск обновляет параметры в направлении:", "options": ["Градиента функции потерь", "Антиградиента функции потерь", "Случайного направления", "Максимума функции потерь"], "correct": 1, "points": 1, "expl": ""}, {"id": 10, "topic": "Базовые понятия", "q": "Алгоритм обратного распространения ошибки (backpropagation) вычисляет:", "options": ["Прогнозы сети на новых данных", "Градиенты функции потерь по параметрам сети", "Размер батча", "Количество эпох"], "correct": 1, "points": 1, "expl": ""}, {"id": 11, "topic": "Базовые понятия", "q": "Переобучение (overfitting) проявляется как:", "options": ["Низкая ошибка и на train, и на test", "Высокая ошибка на train и низкая на test", "Низкая ошибка на train и высокая на test", "Равные ошибки, но обе высокие"], "correct": 2, "points": 1, "expl": ""}, {"id": 12, "topic": "Базовые понятия", "q": "Регуляризация L2 (weight decay) штрафует:", "options": ["Большие значения весов", "Малые значения весов", "Число слоёв", "Размер батча"], "correct": 0, "points": 1, "expl": ""}, {"id": 13, "topic": "Базовые понятия", "q": "Dropout — это техника, которая:", "options": ["Увеличивает число нейронов в слое", "Случайно обнуляет часть нейронов при обучении", "Уменьшает скорость обучения", "Заменяет функцию активации"], "correct": 1, "points": 1, "expl": "Dropout борется с переобучением, предотвращая коадаптацию нейронов."}, {"id": 14, "topic": "FCNN", "q": "Полносвязный (Dense/Linear) слой соединяет:", "options": ["Каждый нейрон только с одним нейроном предыдущего слоя", "Каждый нейрон со всеми нейронами предыдущего слоя", "Только соседние нейроны", "Нейроны одного слоя между собой"], "correct": 1, "points": 1, "expl": ""}, {"id": 15, "topic": "FCNN", "q": "Число параметров полносвязного слоя с n входами и m выходами равно:", "options": ["n + m", "n * m", "n * m + m", "n * m + n"], "correct": 2, "points": 1, "expl": "Веса n*m плюс смещения m."}, {"id": 16, "topic": "FCNN", "q": "Многослойный перцептрон (MLP) обычно содержит:", "options": ["Только входной и выходной слои", "Входной, один или более скрытых и выходной слои", "Только скрытые слои", "Один слой без активаций"], "correct": 1, "points": 1, "expl": ""}, {"id": 17, "topic": "FCNN", "q": "Универсальная теорема аппроксимации утверждает, что сеть с одним скрытым слоем достаточного размера может:", "options": ["Точно решить любую задачу классификации", "Аппроксимировать любую непрерывную функцию на компакте", "Обучаться без данных", "Избежать переобучения"], "correct": 1, "points": 1, "expl": ""}, {"id": 18, "topic": "FCNN", "q": "Для задачи бинарной классификации на выходном слое обычно используют:", "options": ["ReLU", "Сигмоиду", "Линейную функцию", "tanh всегда"], "correct": 1, "points": 1, "expl": ""}, {"id": 19, "topic": "FCNN", "q": "Для многоклассовой классификации на выходном слое применяют:", "options": ["Сигмоиду для каждого класса независимо", "Softmax", "ReLU", "Линейную функцию"], "correct": 1, "points": 1, "expl": ""}, {"id": 20, "topic": "FCNN", "q": "Softmax преобразует вектор логитов в:", "options": ["Вектор бинарных значений", "Распределение вероятностей (сумма = 1)", "Вектор нормированных весов", "Среднее значение"], "correct": 1, "points": 1, "expl": ""}, {"id": 21, "topic": "FCNN", "q": "Функция потерь для многоклассовой классификации с softmax:", "options": ["MSE", "Кросс-энтропия (categorical cross-entropy)", "Hinge loss", "Huber loss"], "correct": 1, "points": 1, "expl": ""}, {"id": 22, "topic": "FCNN", "q": "Инициализация весов Xavier (Glorot) рекомендуется для активаций:", "options": ["ReLU", "Сигмоида и tanh", "Линейной", "Softmax"], "correct": 1, "points": 1, "expl": ""}, {"id": 23, "topic": "FCNN", "q": "Инициализация He (Kaiming) рекомендуется для активаций:", "options": ["Сигмоида", "tanh", "ReLU и её вариантов", "Линейной"], "correct": 2, "points": 1, "expl": ""}, {"id": 24, "topic": "FCNN", "q": "Проблема затухающих градиентов в глубоких FCNN возникает из-за:", "options": ["Слишком большого размера батча", "Произведения малых производных функций активации", "Большого learning rate", "Использования dropout"], "correct": 1, "points": 1, "expl": ""}, {"id": 25, "topic": "FCNN", "q": "Batch Normalization нормализует активации:", "options": ["По всему датасету разово", "По мини-батчу (по оси признаков)", "По времени", "Только по тестовой выборке"], "correct": 1, "points": 1, "expl": ""}, {"id": 26, "topic": "RNN", "q": "RNN обрабатывает последовательности, сохраняя:", "options": ["Только последний вход", "Скрытое состояние (hidden state)", "Все входы в памяти без изменений", "Глобальный градиент"], "correct": 1, "points": 1, "expl": ""}, {"id": 27, "topic": "RNN", "q": "Скрытое состояние h_t в RNN вычисляется из:", "options": ["Только x_t", "h_{t-1} и x_t", "Только h_{t-1}", "Суммы всех предыдущих входов"], "correct": 1, "points": 1, "expl": ""}, {"id": 28, "topic": "RNN", "q": "Разворачивание RNN во времени (unrolling) нужно для:", "options": ["Ускорения инференса", "Применения backpropagation through time (BPTT)", "Уменьшения числа параметров", "Удаления рекуррентности"], "correct": 1, "points": 1, "expl": ""}, {"id": 29, "topic": "RNN", "q": "BPTT расшифровывается как:", "options": ["Backpropagation Through Time", "Batch Processing Through Tensors", "Bidirectional Propagation Through Training", "Basic Propagation Through Topology"], "correct": 0, "points": 1, "expl": ""}, {"id": 30, "topic": "RNN", "q": "Проблема исчезающих градиентов в RNN особенно сильна при:", "options": ["Коротких последовательностях", "Длинных последовательностях", "Большом batch size", "Малом learning rate"], "correct": 1, "points": 1, "expl": ""}, {"id": 31, "topic": "RNN", "q": "LSTM содержит следующие гейты:", "options": ["Только входной", "Входной, забывающий и выходной", "Только выходной", "Один объединённый гейт"], "correct": 1, "points": 1, "expl": ""}, {"id": 32, "topic": "RNN", "q": "Забывающий гейт (forget gate) в LSTM определяет:", "options": ["Какую часть новой информации добавить", "Какую часть предыдущей памяти сохранить", "Что выдать на выход", "Размер скрытого состояния"], "correct": 1, "points": 1, "expl": ""}, {"id": 33, "topic": "RNN", "q": "Ячейка памяти (cell state) в LSTM:", "options": ["Пересоздаётся на каждом шаге", "Передаётся через всю последовательность с минимальными изменениями", "Равна скрытому состоянию", "Используется только на первом шаге"], "correct": 1, "points": 1, "expl": ""}, {"id": 34, "topic": "RNN", "q": "GRU объединяет гейты LSTM в:", "options": ["Три независимых гейта", "Гейт обновления и гейт сброса", "Один гейт", "Гейт памяти и гейт выхода"], "correct": 1, "points": 1, "expl": ""}, {"id": 35, "topic": "RNN", "q": "По сравнению с LSTM, GRU:", "options": ["Имеет больше параметров", "Имеет меньше параметров", "Не имеет рекуррентности", "Работает только с текстом"], "correct": 1, "points": 1, "expl": ""}, {"id": 36, "topic": "RNN", "q": "Схема «многие ко многим» (seq2seq) применяется, например, в:", "options": ["Классификации изображений", "Машинном переводе", "Регрессии одного значения", "Кластеризации"], "correct": 1, "points": 1, "expl": ""}, {"id": 37, "topic": "RNN", "q": "Эмбеддинги (embeddings) в обработке текста — это:", "options": ["One-hot представления токенов", "Плотные векторные представления токенов", "Частоты слов", "Градиенты параметров"], "correct": 1, "points": 1, "expl": ""}, {"id": 38, "topic": "RNN", "q": "Teacher forcing при обучении RNN означает:", "options": ["Использование предсказания модели как входа на следующем шаге", "Подачу истинного предыдущего токена на вход", "Обучение без учителя", "Заморозку весов рекуррентного слоя"], "correct": 1, "points": 1, "expl": ""}, {"id": 39, "topic": "CNN", "q": "Сверточный слой применяет к входу:", "options": ["Полносвязную матрицу", "Фильтры (ядра) к локальным областям", "Случайные проекции", "Глобальное усреднение"], "correct": 1, "points": 1, "expl": ""}, {"id": 40, "topic": "CNN", "q": "Размерность выхода сверточного слоя зависит от:", "options": ["Только от числа фильтров", "Размера ядра, stride, padding и размера входа", "Только от learning rate", "Только от числа эпох"], "correct": 1, "points": 1, "expl": ""}, {"id": 41, "topic": "CNN", "q": "Число параметров сверточного слоя зависит от:", "options": ["Размера входного изображения", "Размера ядра и числа каналов (веса ядра + смещение)", "Размера батча", "Размера выходной карты признаков"], "correct": 1, "points": 1, "expl": ""}, {"id": 42, "topic": "CNN", "q": "Stride (шаг) в свертке определяет:", "options": ["Размер ядра", "Шаг сдвига фильтра по входу", "Число каналов", "Глубину сети"], "correct": 1, "points": 1, "expl": ""}, {"id": 43, "topic": "CNN", "q": "Padding 'same' (при stride=1) сохраняет:", "options": ["Число каналов", "Пространственные размеры карты признаков", "Число параметров", "Значения пикселей"], "correct": 1, "points": 1, "expl": ""}, {"id": 44, "topic": "CNN", "q": "Max pooling выполняет:", "options": ["Увеличение размерности", "Понижение размерности и инвариантность к небольшим сдвигам", "Добавление параметров", "Нормализацию"], "correct": 1, "points": 1, "expl": ""}, {"id": 45, "topic": "CNN", "q": "Ключевое свойство CNN — это:", "options": ["Полная связность всех нейронов", "Локальная связность и разделение весов (weight sharing)", "Отсутствие функций активации", "Рекуррентность"], "correct": 1, "points": 1, "expl": ""}, {"id": 46, "topic": "CNN", "q": "Receptive field нейрона — это:", "options": ["Число его параметров", "Область входа, влияющая на его активацию", "Размер батча", "Число фильтров в слое"], "correct": 1, "points": 1, "expl": ""}, {"id": 47, "topic": "CNN", "q": "Типичная архитектура CNN включает:", "options": ["Только полносвязные слои", "Сверточные и пулинговые слои, затем полносвязные", "Только рекуррентные слои", "Только слои нормализации"], "correct": 1, "points": 1, "expl": ""}, {"id": 48, "topic": "CNN", "q": "ResNet использует остаточные связи (skip connections) для:", "options": ["Увеличения размера батча", "Борьбы с затуханием градиентов в глубоких сетях", "Уменьшения числа фильтров", "Замены функции активации"], "correct": 1, "points": 1, "expl": ""}, {"id": 49, "topic": "CNN", "q": "Свертка 1x1 применяется для:", "options": ["Увеличения пространственных размеров", "Изменения числа каналов (проекция/сжатие)", "Вычисления градиентов", "Удаления padding"], "correct": 1, "points": 1, "expl": ""}, {"id": 50, "topic": "CNN", "q": "CNN особенно эффективны для данных с:", "options": ["Последовательной (временной) структурой", "Пространственной структурой (изображения)", "Табличными данными без структуры", "Текстовыми последовательностями произвольной длины"], "correct": 1, "points": 1, "expl": ""}];
-let answers={};let startedAt=null;let timerId=null;
-function escapeHtml(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
-document.getElementById('startBtn').addEventListener('click',()=>{
-  const s=document.getElementById('surname').value.trim();
-  const n=document.getElementById('name').value.trim();
-  const g=document.getElementById('group').value.trim();
-  if(!s||!n||!g){alert('Заполните фамилию, имя и группу');return;}
-  startedAt=new Date();
+let answers = {};
+let startedAt = null;
+
+function escapeHtml(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+function init(){
+  const btn = document.getElementById('startBtn');
+  if(!btn){ console.error('startBtn not found'); return; }
+  btn.addEventListener('click', start);
+  document.getElementById('submitBtn').addEventListener('click', onSubmit);
+}
+function start(){
+  const s = document.getElementById('surname').value.trim();
+  const n = document.getElementById('name').value.trim();
+  const g = document.getElementById('group').value.trim();
+  const err = document.getElementById('introErr');
+  if(!s||!n||!g){ err.textContent='Заполните фамилию, имя и группу'; err.classList.remove('hidden'); return; }
+  err.classList.add('hidden');
+  startedAt = new Date();
   document.getElementById('intro').classList.add('hidden');
   document.getElementById('quiz').classList.remove('hidden');
   renderQuestions();
-  const mins=parseInt(document.getElementById('time').value||'0',10);
-  if(mins>0){
-    let left=mins*60;const tEl=document.getElementById('timer');
-    timerId=setInterval(()=>{left--;const m=Math.floor(left/60),sec=left%60;tEl.textContent='Осталось времени: '+m+':'+(sec<10?'0':'')+sec;if(left<=0){clearInterval(timerId);submit();}},1000);
-    tEl.textContent='Осталось времени: '+mins+':00';
-  }
-});
+  window.scrollTo({top:0,behavior:'smooth'});
+}
 function renderQuestions(){
-  const box=document.getElementById('questions');box.innerHTML='';
+  const box = document.getElementById('questions');
+  box.innerHTML = '';
   QUESTIONS.forEach((q,i)=>{
-    const div=document.createElement('div');div.className='card';
-    div.innerHTML='<div class="topic">'+escapeHtml(q.topic)+' · вопрос '+(i+1)+' из '+QUESTIONS.length+'</div><div class="qtext"><span class="qnum">Q'+q.id+'. </span>'+escapeHtml(q.q)+'</div>';
+    const div = document.createElement('div');
+    div.className='card';
+    div.innerHTML = '<div class="topic">'+escapeHtml(q.topic)+' · вопрос '+(i+1)+' из '+QUESTIONS.length+'</div>'+
+      '<div class="qtext"><span class="qnum">Q'+q.id+'. </span>'+escapeHtml(q.q)+'</div>';
     q.options.forEach((opt,oi)=>{
-      const lab=document.createElement('label');lab.className='opt';
-      lab.innerHTML='<input type="radio" name="q'+q.id+'" value="'+oi+'"> '+escapeHtml(opt);
-      lab.querySelector('input').addEventListener('change',(e)=>{answers[q.id]=parseInt(e.target.value,10);updateProgress();});
+      const lab = document.createElement('label');
+      lab.className='opt';
+      const inp = document.createElement('input');
+      inp.type='radio'; inp.name='q'+q.id; inp.value=oi;
+      inp.addEventListener('change', ()=>{ answers[q.id]=oi; updateProgress(); });
+      lab.appendChild(inp);
+      lab.appendChild(document.createTextNode(' '+opt));
       div.appendChild(lab);
     });
-    const exp=document.createElement('div');exp.className='expl';exp.id='expl'+q.id;exp.textContent=q.expl?('Пояснение: '+q.expl):'';div.appendChild(exp);
+    const exp = document.createElement('div');
+    exp.className='expl'; exp.id='expl'+q.id;
+    exp.textContent = q.expl ? ('Пояснение: '+q.expl) : '';
+    div.appendChild(exp);
     box.appendChild(div);
-  });updateProgress();
+  });
+  updateProgress();
 }
-function updateProgress(){const done=Object.keys(answers).length;document.getElementById('bar').style.width=Math.round(done/QUESTIONS.length*100)+'%';}
+function updateProgress(){
+  const done = Object.keys(answers).length;
+  document.getElementById('bar').style.width = Math.round(done/QUESTIONS.length*100)+'%';
+}
+function onSubmit(){
+  if(Object.keys(answers).length < QUESTIONS.length){
+    if(!confirm('Отвечено не на все вопросы ('+Object.keys(answers).length+'/'+QUESTIONS.length+'). Завершить?')) return;
+  }
+  submit();
+}
 function submit(){
-  if(timerId){clearInterval(timerId);timerId=null;}
-  document.getElementById('submitBtn').disabled=true;
+  document.getElementById('submitBtn').disabled = true;
   let score=0,total=0;const details=[];
   QUESTIONS.forEach(q=>{
     total+=q.points;const ans=answers[q.id];const ok=ans===q.correct;if(ok)score+=q.points;
@@ -95,7 +129,9 @@ function submit(){
     });
     const exp=document.getElementById('expl'+q.id);if(exp)exp.classList.add('show');
   });
-  const s=document.getElementById('surname').value.trim();const n=document.getElementById('name').value.trim();const g=document.getElementById('group').value.trim();
+  const s=document.getElementById('surname').value.trim();
+  const n=document.getElementById('name').value.trim();
+  const g=document.getElementById('group').value.trim();
   const pct=Math.round(score/total*100);
   const grade=pct>=90?'Отлично':pct>=75?'Хорошо':pct>=60?'Удовлетворительно':'Неудовлетворительно';
   const endedAt=new Date();const minutes=Math.round((endedAt-startedAt)/60000);
@@ -129,5 +165,8 @@ function toCSV(s,n,g,score,total,pct,minutes,details){let c='surname,name,group,
 ';details.forEach(d=>{c+=[d.id,d.topic,d.question,d.chosen,d.correct,d.ok,d.points].map(x=>'"'+String(x==null?'':x).replace(/"/g,'""')+'"').join(',')+'
 ';});return c;}
 function download(filename,content,mime){const blob=new Blob([content],{type:mime+';charset=utf-8'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=filename;a.click();URL.revokeObjectURL(url);}
-document.getElementById('submitBtn').addEventListener('click',()=>{if(Object.keys(answers).length<QUESTIONS.length){if(!confirm('Отвечено не на все вопросы ('+Object.keys(answers).length+'/'+QUESTIONS.length+'). Завершить?'))return;}submit();});
-</script></body></html>
+
+if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',init);}else{init();}
+</script>
+</body>
+</html>
