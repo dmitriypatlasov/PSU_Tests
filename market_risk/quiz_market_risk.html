@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="ru"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Тест: рыночные риски</title>
+<style>
+:root{--bg:#0f172a;--card:#1e293b;--accent:#38bdf8;--ok:#22c55e;--bad:#ef4444;--muted:#94a3b8;--text:#e2e8f0;}
+*{box-sizing:border-box;}body{margin:0;font-family:"Segoe UI",system-ui,sans-serif;background:var(--bg);color:var(--text);}
+.wrap{max-width:920px;margin:0 auto;padding:24px 16px 60px;}
+h1{font-size:26px;margin:0 0 8px;}.sub{color:var(--muted);margin-bottom:24px;}
+.card{background:var(--card);border-radius:12px;padding:20px;margin-bottom:16px;border:1px solid #334155;}
+label{display:block;margin-bottom:6px;font-weight:600;}
+input{width:100%;padding:10px 12px;border-radius:8px;border:1px solid #475569;background:#0f172a;color:var(--text);font-size:15px;}
+input.num{max-width:260px;}
+.row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;}
+.qnum{color:var(--accent);font-weight:700;}.qtext{font-size:17px;margin:8px 0 12px;}
+.opt{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:8px;border:1px solid #334155;margin-bottom:8px;cursor:pointer;}
+.opt:hover{background:#0f172a;}.opt input{width:auto;}
+.opt.wrong{border-color:var(--bad);background:#2a0a0a;}
+.topic{font-size:12px;color:var(--muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px;}
+.unit{color:var(--muted);font-size:13px;margin-left:8px;}
+button{background:var(--accent);color:#0f172a;border:none;padding:12px 24px;border-radius:8px;font-size:16px;font-weight:700;cursor:pointer;}
+button.secondary{background:#334155;color:var(--text);}button:disabled{opacity:.5;cursor:not-allowed;}
+.progress{height:8px;background:#334155;border-radius:4px;overflow:hidden;margin-bottom:16px;}
+.progress>div{height:100%;background:var(--accent);transition:width .3s;}
+.result{text-align:center;padding:30px;}.score{font-size:48px;font-weight:800;color:var(--accent);}
+.grade{font-size:20px;margin:8px 0 16px;}.hidden{display:none;}
+.toolbar{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px;justify-content:center;}
+table{width:100%;border-collapse:collapse;font-size:13px;margin-top:12px;}
+th,td{border:1px solid #334155;padding:6px 8px;text-align:left;}th{background:#0f172a;}
+h3{margin-top:20px;}.err{color:var(--bad);margin-top:8px;}
+</style></head><body><div class="wrap">
+<h1>Тест: рыночные риски</h1>
+<div class="sub">Темы: базовые понятия, VaR, волатильность, корреляция, процентный риск, валютный риск, стресс-тесты, метрики. 50 вопросов по 1 баллу. Есть расчётные задания.</div>
+<div id="intro" class="card">
+  <div class="row">
+    <div><label>Фамилия</label><input id="surname" placeholder="Иванов"></div>
+    <div><label>Имя</label><input id="name" placeholder="Иван"></div>
+    <div><label>Группа</label><input id="group" placeholder="ФИН-21"></div>
+  </div>
+  <div id="introErr" class="err hidden"></div>
+  <div class="toolbar"><button id="startBtn">Начать тест</button></div>
+</div>
+<div id="quiz" class="hidden">
+  <div class="progress"><div id="bar" style="width:0%"></div></div>
+  <div id="questions"></div>
+  <div class="toolbar"><button id="submitBtn">Завершить и проверить</button></div>
+</div>
+<div id="result" class="hidden card result"></div>
+</div>
+<script>
+const QUESTIONS = [{"id": 1, "type": "mc", "topic": "Базовые понятия рыночных рисков", "q": "Что такое рыночный риск?", "points": 1, "options": ["Риск потерь из-за изменения рыночных цен, ставок, курсов", "Риск невозврата кредита", "Риск операционных сбоев", "Риск ликвидности банка"]}, {"id": 2, "type": "mc", "topic": "Базовые понятия рыночных рисков", "q": "Какие факторы относятся к рыночным рискам?", "points": 1, "options": ["Цены акций, процентные ставки, курсы валют, цены товаров", "Кредитоспособность заёмщика", "Мошенничество сотрудников", "Сбои IT-систем"]}, {"id": 3, "type": "mc", "topic": "Базовые понятия рыночных рисков", "q": "Систематический (рыночный) риск:", "points": 1, "options": ["Можно полностью устранить диверсификацией", "Нельзя устранить диверсификацией", "Возникает только у банков", "Равен нулю при хеджировании"]}, {"id": 4, "type": "mc", "topic": "Базовые понятия рыночных рисков", "q": "Несистематический (специфический) риск:", "points": 1, "options": ["Нельзя устранить диверсификацией", "Можно снизить диверсификацией портфеля", "Зависит только от ставки ЦБ", "Равен бета-коэффициенту"]}, {"id": 5, "type": "mc", "topic": "Базовые понятия рыночных рисков", "q": "Источником рыночного риска является:", "points": 1, "options": ["Волатильность рыночных цен и ставок", "Размер уставного капитала", "Число сотрудников", "Наличие филиалов"]}, {"id": 6, "type": "mc", "topic": "Базовые понятия рыночных рисков", "q": "Управление рыночным риском включает:", "points": 1, "options": ["Измерение, лимитирование, хеджирование, мониторинг", "Только увеличение капитала", "Только страхование", "Только аудит"]}, {"id": 7, "type": "mc", "topic": "Базовые понятия рыночных рисков", "q": "Рыночный риск отличается от кредитного тем, что:", "points": 1, "options": ["Возникает из-за изменения рыночных цен, а не дефолта контрагента", "Зависит от платёжеспособности заёмщика", "Возникает только при выдаче кредитов", "Измеряется только рейтингами"]}, {"id": 8, "type": "mc", "topic": "Базовые понятия рыночных рисков", "q": "Основная мера рыночного риска:", "points": 1, "options": ["Value at Risk (VaR)", "P/E ratio", "ROE", "Дюрация"]}, {"id": 9, "type": "mc", "topic": "Value at Risk (VaR)", "q": "VaR на уровне 95% за день означает:", "points": 1, "options": ["С вероятностью 95% потери за день не превысят VaR", "Потери точно равны VaR", "Максимально возможные потери равны VaR", "VaR — это ожидаемая прибыль"]}, {"id": 10, "type": "mc", "topic": "Value at Risk (VaR)", "q": "Какие методы расчёта VaR применяются?", "points": 1, "options": ["Исторический, параметрический (дельта-нормальный), Монте-Карло", "Только Монте-Карло", "Только исторический", "Только экспертная оценка"]}, {"id": 11, "type": "mc", "topic": "Value at Risk (VaR)", "q": "Параметрический VaR предполагает:", "points": 1, "options": ["Нормальное распределение доходностей", "Равномерное распределение", "Отсутствие волатильности", "Линейную зависимость от времени"]}, {"id": 12, "type": "mc", "topic": "Value at Risk (VaR)", "q": "Недостаток VaR:", "points": 1, "options": ["Не показывает размер потерь за пределами порога", "Слишком точно измеряет риск", "Требует слишком мало данных", "Не зависит от волатильности"]}, {"id": 13, "type": "mc", "topic": "Value at Risk (VaR)", "q": "Expected Shortfall (CVaR) — это:", "points": 1, "options": ["Средние потери в случаях, когда убыток превышает VaR", "Максимальный убыток за период", "Минимальный убыток", "Вероятность убытка"]}, {"id": 14, "type": "mc", "topic": "Value at Risk (VaR)", "q": "VaR зависит от:", "points": 1, "options": ["Уровня доверия, горизонта, волатильности портфеля", "Только от числа акций", "Только от дивидендов", "Только от комиссий"]}, {"id": 15, "type": "num", "topic": "Value at Risk (VaR)", "q": "Портфель 1 000 000 руб., дневная σ = 2% (0.02). VaR 95% (z=1.645). Рассчитайте VaR, руб.", "points": 1, "unit": "руб.", "tol": 1}, {"id": 16, "type": "num", "topic": "Value at Risk (VaR)", "q": "Портфель 500 000 руб., дневная σ = 1.5% (0.015). VaR 99% (z=2.33). Рассчитайте VaR, руб.", "points": 1, "unit": "руб.", "tol": 1}, {"id": 17, "type": "mc", "topic": "Волатильность и статистика", "q": "Волатильность (историческая) — это:", "points": 1, "options": ["Стандартное отклонение доходностей", "Среднее значение доходностей", "Максимальная доходность", "Минимальная доходность"]}, {"id": 18, "type": "mc", "topic": "Волатильность и статистика", "q": "Подразумеваемая волатильность (implied volatility) получается из:", "points": 1, "options": ["Цен опционов", "Исторических котировок", "Отчётности компаний", "Макроэкономических данных"]}, {"id": 19, "type": "mc", "topic": "Волатильность и статистика", "q": "Перевод дневной волатильности в годовую (252 торговых дня):", "points": 1, "options": ["Умножить на sqrt(252)", "Умножить на 252", "Разделить на sqrt(252)", "Возвести в квадрат"]}, {"id": 20, "type": "mc", "topic": "Волатильность и статистика", "q": "Кластеризация волатильности (волатильность группируется во времени) описывается моделью:", "points": 1, "options": ["GARCH", "CAPM", "Black-Scholes", "Модель Гордона"]}, {"id": 21, "type": "num", "topic": "Волатильность и статистика", "q": "Дневная волатильность = 1% (0.01). Годовая волатильность = 0.01*sqrt(252). Рассчитайте, %.", "points": 1, "unit": "%", "tol": 0.1}, {"id": 22, "type": "num", "topic": "Волатильность и статистика", "q": "Доходности за 3 дня: 2%, -1%, 3%. Среднее = 4/3%. Дисперсия выборочная = sum((r-mean)^2)/(n-1). Рассчитайте стандартное отклонение, %.", "points": 1, "unit": "%", "tol": 0.1}, {"id": 23, "type": "mc", "topic": "Корреляция и диверсификация", "q": "Коэффициент корреляции находится в диапазоне:", "points": 1, "options": ["[-1; 1]", "[0; 1]", "[-∞; +∞)", "[0; +∞)"]}, {"id": 24, "type": "mc", "topic": "Корреляция и диверсификация", "q": "Диверсификация портфеля снижает:", "points": 1, "options": ["Несистематический риск", "Систематический риск", "Процентный риск", "Валютный риск полностью"]}, {"id": 25, "type": "mc", "topic": "Корреляция и диверсификация", "q": "При корреляции ρ = -1 двух активов:", "points": 1, "options": ["Риск портфеля можно свести к нулю (при оптимальных весах)", "Риск максимальный", "Корреляция не влияет на риск", "Доходность равна нулю"]}, {"id": 26, "type": "mc", "topic": "Корреляция и диверсификация", "q": "Коэффициент бета (β) измеряет:", "points": 1, "options": ["Чувствительность доходности актива к рынку", "Абсолютную доходность", "Волатильность без рынка", "Ликвидность актива"]}, {"id": 27, "type": "num", "topic": "Корреляция и диверсификация", "q": "Портфель: w1=0.6, r1=10%; w2=0.4, r2=20%. Ожидаемая доходность портфеля, %.", "points": 1, "unit": "%", "tol": 0.01}, {"id": 28, "type": "num", "topic": "Корреляция и диверсификация", "q": "Два актива: w1=0.5, w2=0.5, σ1=20%, σ2=30%, ρ=0.5. Риск портфеля σp = sqrt(0.25*0.04+0.25*0.09+2*0.5*0.5*0.2*0.3*0.5). Рассчитайте, %.", "points": 1, "unit": "%", "tol": 0.1}, {"id": 29, "type": "mc", "topic": "Процентный риск и дюрация", "q": "Дюрация облигации измеряет:", "points": 1, "options": ["Чувствительность цены к изменению ставки", "Кредитный рейтинг", "Ликвидность", "Доходность к погашению"]}, {"id": 30, "type": "mc", "topic": "Процентный риск и дюрация", "q": "Модифицированная дюрация используется для:", "points": 1, "options": ["Оценки изменения цены при изменении доходности", "Расчёта купона", "Определения номинала", "Расчёта НКД"]}, {"id": 31, "type": "mc", "topic": "Процентный риск и дюрация", "q": "Выпуклость (convexity) уточняет:", "points": 1, "options": ["Оценку изменения цены при больших изменениях ставки", "Только знак изменения", "Только купон", "Только номинал"]}, {"id": 32, "type": "mc", "topic": "Процентный риск и дюрация", "q": "При росте ставок цена облигации:", "points": 1, "options": ["Падает", "Растёт", "Не меняется", "Растёт только при купоне"]}, {"id": 33, "type": "num", "topic": "Процентный риск и дюрация", "q": "Дюрация = 5 лет, ставка выросла на 1% (0.01). Изменение цены ≈ -D*Δy. Рассчитайте изменение, %.", "points": 1, "unit": "%", "tol": 0.01}, {"id": 34, "type": "num", "topic": "Процентный риск и дюрация", "q": "Облигация: цена 1000, дюрация 4, ставка выросла на 0.5% (0.005). Изменение цены, руб. (≈ -D*Δy*P).", "points": 1, "unit": "руб.", "tol": 0.5}, {"id": 35, "type": "mc", "topic": "Валютный риск", "q": "Валютный риск возникает при:", "points": 1, "options": ["Изменении обменных курсов", "Изменении ставки ЦБ по рублю", "Инфляции", "Дефолте эмитента"]}, {"id": 36, "type": "mc", "topic": "Валютный риск", "q": "Инструмент хеджирования валютного риска:", "points": 1, "options": ["Форвардный контракт на валюту", "Акция", "Облигация", "Депозит"]}, {"id": 37, "type": "mc", "topic": "Валютный риск", "q": "Паритет процентных ставок связывает:", "points": 1, "options": ["Разницу ставок и форвардный курс", "Инфляцию и ВВП", "Акции и облигации", "Кредит и депозит"]}, {"id": 38, "type": "num", "topic": "Валютный риск", "q": "Имеете 10 000 USD, курс 90 руб/USD. Конвертация в рубли. Сколько рублей?", "points": 1, "unit": "руб.", "tol": 1}, {"id": 39, "type": "mc", "topic": "Стресс-тестирование", "q": "Стресс-тестирование — это:", "points": 1, "options": ["Оценка потерь при экстремальных сценариях", "Расчёт VaR при нормальном распределении", "Оценка средней доходности", "Расчёт бета"]}, {"id": 40, "type": "mc", "topic": "Стресс-тестирование", "q": "Сценарный анализ отличается от стресс-теста тем, что:", "points": 1, "options": ["Рассматривает конкретные сценарии (исторические/гипотетические)", "Использует только нормальное распределение", "Не требует данных", "Равен VaR"]}, {"id": 41, "type": "mc", "topic": "Стресс-тестирование", "q": "Обратный стресс-тест (reverse stress test) ищет:", "points": 1, "options": ["Сценарии, приводящие к разорению/дефолту", "Максимальную прибыль", "Минимальную волатильность", "Оптимальный портфель"]}, {"id": 42, "type": "mc", "topic": "Стресс-тестирование", "q": "Ограничение стресс-тестов:", "points": 1, "options": ["Зависимость от выбранных сценариев, субъективность", "Точность до копейки", "Автоматический расчёт", "Не требуют предположений"]}, {"id": 43, "type": "mc", "topic": "Метрики риска и доходности", "q": "Коэффициент Шарпа (Sharpe ratio) = ", "points": 1, "options": ["(Rp - Rf) / σp", "Rp / σp", "(Rp - Rf) * σp", "Rp + Rf"]}, {"id": 44, "type": "mc", "topic": "Метрики риска и доходности", "q": "Бета-коэффициент актива рассчитывается как:", "points": 1, "options": ["Cov(Ra, Rm) / Var(Rm)", "Var(Ra) / Var(Rm)", "Cov(Ra,Rm) * Var(Rm)", "E(Ra)/E(Rm)"]}, {"id": 45, "type": "mc", "topic": "Метрики риска и доходности", "q": "Трекинг-ошибка (tracking error) — это:", "points": 1, "options": ["Стандартное отклонение разности доходностей портфеля и бенчмарка", "Разность средних доходностей", "Максимальное отклонение", "Корреляция с бенчмарком"]}, {"id": 46, "type": "mc", "topic": "Метрики риска и доходности", "q": "Коэффициент вариации (CV) = ", "points": 1, "options": ["σ / μ", "μ / σ", "σ * μ", "σ - μ"]}, {"id": 47, "type": "mc", "topic": "Метрики риска и доходности", "q": "Информационный коэффициент (IR) = ", "points": 1, "options": ["(Rp - Rb) / TE", "Rp / TE", "(Rp-Rb)*TE", "Rp+Rb"]}, {"id": 48, "type": "num", "topic": "Метрики риска и доходности", "q": "Rp=12%, Rf=4%, σp=15%. Коэффициент Шарпа = (0.12-0.04)/0.15. Рассчитайте.", "points": 1, "unit": "", "tol": 0.01}, {"id": 49, "type": "num", "topic": "Метрики риска и доходности", "q": "Cov(Ra,Rm)=0.0012, Var(Rm)=0.0016. Бета = Cov/Var. Рассчитайте.", "points": 1, "unit": "", "tol": 0.01}, {"id": 50, "type": "num", "topic": "Метрики риска и доходности", "q": "Средняя доходность μ=10% (0.10), σ=15% (0.15). Коэффициент вариации = σ/μ. Рассчитайте.", "points": 1, "unit": "", "tol": 0.01}];
+const MC_IDS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 17, 18, 19, 20, 23, 24, 25, 26, 29, 30, 31, 32, 35, 36, 37, 39, 40, 41, 42, 43, 44, 45, 46, 47];
+const NUM_IDS = [15, 16, 21, 22, 27, 28, 33, 34, 38, 48, 49, 50];
+const MC_KEY = [1, 1, 2, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1];
+const NUM_KEY = [32907919, 17482919, 23789, 9999, 21919, 28539, 2919, -12081, 900007919, 8452, 8669, 9419];
+let answers = {};
+let startedAt = null;
+function escapeHtml(s){ return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+function mcCorrectIndex(qid){ const pos=MC_IDS.indexOf(qid); return (MC_KEY[pos]+ (QOPTS(qid)-1) ) % QOPTS(qid); }
+function QOPTS(qid){ const q=QUESTIONS.find(x=>x.id===qid); return q.options?q.options.length:0; }
+function mcCorrect(qid){ const pos=MC_IDS.indexOf(qid); const q=QUESTIONS.find(x=>x.id===qid); const n=q.options.length; return (MC_KEY[pos] + n - 1) % n; }
+function numCorrect(qid){ const pos=NUM_IDS.indexOf(qid); return (NUM_KEY[pos]-7919)/1000; }
+function init(){
+  const btn = document.getElementById("startBtn");
+  if(!btn){ console.error("startBtn not found"); return; }
+  btn.addEventListener("click", start);
+  document.getElementById("submitBtn").addEventListener("click", onSubmit);
+}
+function start(){
+  const s = document.getElementById("surname").value.trim();
+  const n = document.getElementById("name").value.trim();
+  const g = document.getElementById("group").value.trim();
+  const err = document.getElementById("introErr");
+  if(!s||!n||!g){ err.textContent="Заполните фамилию, имя и группу"; err.classList.remove("hidden"); return; }
+  err.classList.add("hidden");
+  startedAt = new Date();
+  document.getElementById("intro").classList.add("hidden");
+  document.getElementById("quiz").classList.remove("hidden");
+  renderQuestions();
+  window.scrollTo({top:0,behavior:"smooth"});
+}
+function renderQuestions(){
+  const box = document.getElementById("questions"); box.innerHTML = "";
+  QUESTIONS.forEach((q,i)=>{
+    const div = document.createElement("div"); div.className="card";
+    div.innerHTML = '<div class="topic">'+escapeHtml(q.topic)+' · вопрос '+(i+1)+' из '+QUESTIONS.length+'</div><div class="qtext"><span class="qnum">Q'+q.id+'. </span>'+escapeHtml(q.q)+'</div>';
+    if(q.type==="mc"){
+      q.options.forEach((opt,oi)=>{
+        const lab = document.createElement("label"); lab.className="opt";
+        const inp = document.createElement("input");
+        inp.type="radio"; inp.name="q"+q.id; inp.value=oi;
+        inp.addEventListener("change", ()=>{ answers[q.id]=oi; updateProgress(); });
+        lab.appendChild(inp);
+        lab.appendChild(document.createTextNode(" "+opt));
+        div.appendChild(lab);
+      });
+    } else {
+      const wrap=document.createElement("div");
+      const inp=document.createElement("input"); inp.type="number"; inp.step="any"; inp.className="num"; inp.id="num_"+q.id;
+      inp.placeholder="Введите число"+(q.unit?(" ("+q.unit+")"):"");
+      inp.addEventListener("input", ()=>{ answers[q.id]=inp.value; updateProgress(); });
+      wrap.appendChild(inp);
+      if(q.unit){const u=document.createElement("span");u.className="unit";u.textContent=q.unit;wrap.appendChild(u);}
+      div.appendChild(wrap);
+    }
+    box.appendChild(div);
+  });
+  updateProgress();
+}
+function updateProgress(){
+  const done = Object.keys(answers).filter(k=>answers[k]!=="" && answers[k]!=null).length;
+  document.getElementById("bar").style.width = Math.round(done/QUESTIONS.length*100)+"%";
+}
+function onSubmit(){
+  if(Object.keys(answers).filter(k=>answers[k]!=="" && answers[k]!=null).length < QUESTIONS.length){
+    if(!confirm("Отвечено не на все вопросы. Завершить?")) return;
+  }
+  submit();
+}
+function submit(){
+  document.getElementById("submitBtn").disabled = true;
+  let score=0,total=0;const details=[];
+  QUESTIONS.forEach(q=>{
+    total+=q.points;
+    let ans=answers[q.id];
+    let ok=false;
+    if(q.type==="mc"){ const corr=mcCorrect(q.id); ok = (ans===corr); if(ans==null) ans=null; }
+    else { const corr=numCorrect(q.id); const u=parseFloat(String(ans).replace(",",".")); ok = !isNaN(u) && Math.abs(u-corr) <= (q.tol||0.01)*Math.max(1,Math.abs(corr)); ans = (ans==null||ans==="")?null:u; }
+    if(ok) score+=q.points;
+    let chosenStr;
+    if(q.type==="mc"){ chosenStr = (ans==null?null:q.options[ans]); }
+    else { chosenStr = (ans==null?null:String(ans)+(q.unit?(" "+q.unit):"")); }
+    details.push({id:q.id,type:q.type,topic:q.topic,question:q.q,chosen:chosenStr,ok:ok,points:ok?q.points:0});
+    if(q.type==="mc"){
+      document.querySelectorAll("input[name=\"q"+q.id+"\"]").forEach((r,oi)=>{
+        const lab=r.parentElement;if(r.checked&&oi!==mcCorrect(q.id))lab.classList.add("wrong");r.disabled=true;
+      });
+    } else {
+      const inp=document.getElementById("num_"+q.id); if(inp){ inp.disabled=true; const corr=numCorrect(q.id); const u=parseFloat(String(answers[q.id]).replace(",",".")); if(!isNaN(u) && Math.abs(u-corr) > (q.tol||0.01)*Math.max(1,Math.abs(corr))) inp.style.borderColor="var(--bad)"; }
+    }
+  });
+  const s=document.getElementById("surname").value.trim();
+  const n=document.getElementById("name").value.trim();
+  const g=document.getElementById("group").value.trim();
+  const pct=Math.round(score/total*100);
+  const grade=pct>=90?"Отлично":pct>=75?"Хорошо":pct>=60?"Удовлетворительно":"Неудовлетворительно";
+  const endedAt=new Date();const minutes=Math.round((endedAt-startedAt)/60000);
+  const res=document.getElementById("result");res.classList.remove("hidden");
+  res.innerHTML="<div class=\"score\">"+score+" / "+total+"</div><div class=\"grade\">"+grade+" ("+pct+"%)</div><div>"+escapeHtml(s+" "+n)+", группа "+escapeHtml(g)+"</div><div class=\"sub\">Время: "+minutes+" мин. Правильных: "+details.filter(d=>d.ok).length+" из "+QUESTIONS.length+"</div>";
+  const byTopic={};details.forEach(d=>{if(!byTopic[d.topic])byTopic[d.topic]={ok:0,tot:0};byTopic[d.topic].tot++;if(d.ok)byTopic[d.topic].ok++;});
+  let trows="<h3>По темам</h3><table><tr><th>Тема</th><th>Верно</th><th>Всего</th><th>%</th></tr>";
+  Object.keys(byTopic).forEach(t=>{const v=byTopic[t];trows+="<tr><td>"+escapeHtml(t)+"</td><td>"+v.ok+"</td><td>"+v.tot+"</td><td>"+Math.round(v.ok/v.tot*100)+"%</td></tr>";});
+  trows+="</table>";res.innerHTML+=trows;
+  const csv=toCSV(s,n,g,score,total,pct,minutes,details);
+  const jsonStr=JSON.stringify({surname:s,name:n,group:g,score:score,total:total,pct:pct,minutes:minutes,started:startedAt.toISOString(),finished:endedAt.toISOString(),details:details},null,2);
+  res.innerHTML+="<div class=\"toolbar center\" style=\"justify-content:center;margin-top:16px\"><button class=\"secondary\" id=\"dlCsv\">Скачать CSV</button><button class=\"secondary\" id=\"dlJson\">Скачать JSON</button><button class=\"secondary\" id=\"mailtoBtn\">Отправить результат (email)</button></div>";
+  document.getElementById("dlCsv").addEventListener("click",()=>download("result_"+s+"_"+n+".csv",csv,"text/csv"));
+  document.getElementById("dlJson").addEventListener("click",()=>download("result_"+s+"_"+n+".json",jsonStr,"application/json"));
+  document.getElementById("mailtoBtn").addEventListener("click",()=>{const subject=encodeURIComponent("Результат теста: "+s+" "+n+" ("+g+")");const body=encodeURIComponent("Фамилия: "+s+"\n"+"Имя: "+n+"\n"+"Группа: "+g+"\n"+"Баллы: "+score+"/"+total+" ("+pct+"%)\n"+"Время: "+minutes+" мин\n\n"+jsonStr);window.location.href="mailto:?subject="+subject+"&body="+body;});
+  try{const key="quiz_results_mr";const arr=JSON.parse(localStorage.getItem(key)||"[]");arr.push({surname:s,name:n,group:g,score:score,total:total,pct:pct,minutes:minutes,when:endedAt.toISOString()});localStorage.setItem(key,JSON.stringify(arr));}catch(e){}
+  window.scrollTo({top:0,behavior:"smooth"});
+}
+function toCSV(s,n,g,score,total,pct,minutes,details){let c="surname,name,group,score,total,pct,minutes\n";c+=[s,n,g,score,total,pct,minutes].map(x=>"\""+String(x).replace(/"/g,"\"\"")+"\"").join(",")+"\n\n";c+="id,type,topic,question,chosen,ok,points\n";details.forEach(d=>{c+=[d.id,d.type,d.topic,d.question,d.chosen,d.ok,d.points].map(x=>"\""+String(x==null?"":x).replace(/"/g,"\"\"")+"\"").join(",")+"\n";});return c;}
+function download(filename,content,mime){const blob=new Blob([content],{type:mime+";charset=utf-8"});const url=URL.createObjectURL(blob);const a=document.createElement("a");a.href=url;a.download=filename;a.click();URL.revokeObjectURL(url);}
+if(document.readyState==="loading"){document.addEventListener("DOMContentLoaded",init);}else{init();}
+</script></body></html>
